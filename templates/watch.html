@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Watch {{ movie.title }} - CINEGO{% endblock %}
+
+{% block extra_css %}
+<style>
+    .watch-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .video-player-wrapper {
+        position: relative;
+        width: 100%;
+        background: #000;
+        margin-bottom: 2rem;
+    }
+
+    .video-player {
+        width: 100%;
+        max-height: 80vh;
+        display: block;
+    }
+
+    .video-controls-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+        padding: 2rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .video-player-wrapper:hover .video-controls-overlay {
+        opacity: 1;
+    }
+
+    .movie-info-section {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .movie-header {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .movie-poster-small {
+        width: 100%;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .movie-details {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .movie-title-large {
+        font-family: 'Bebas Neue', cursive;
+        font-size: 3rem;
+        letter-spacing: 2px;
+        margin: 0;
+    }
+
+    .movie-metadata {
+        display: flex;
+        gap: 2rem;
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    .movie-metadata span {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .rating-large {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .movie-description-full {
+        color: var(--text-secondary);
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .recommended-section {
+        margin-top: 3rem;
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        padding: 0.8rem 1.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: var(--text-primary);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateX(-5px);
+    }
+
+    .player-error {
+        background: rgba(255, 0, 0, 0.1);
+        border: 1px solid rgba(255, 0, 0, 0.3);
+        color: #ff6b6b;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 2rem;
+        text-align: center;
+    }
+
+    @media (max-width: 768px) {
+        .movie-header {
+            grid-template-columns: 1fr;
+        }
+
+        .movie-title-large {
+            font-size: 2rem;
+        }
+
+        .movie-metadata {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="watch-container">
+    <!-- Video Player -->
+    <div class="video-player-wrapper">
+        {% if movie.video_url %}
+        <video class="video-player" controls autoplay>
+            <source src="{{ movie.video_url }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        {% else %}
+        <div class="player-error">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <h3>Video Not Available</h3>
+            <p>This movie is currently not available for streaming.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Movie Information -->
+    <div class="movie-info-section">
+        <a href="{{ url_for('index') }}" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+
+        <div class="movie-header">
+            <img src="{{ movie.image_url }}" alt="{{ movie.title }}" class="movie-poster-small" onerror="this.src='https://via.placeholder.com/200x300/1a1a1a/00d9ff?text={{ movie.title }}'">
+            
+            <div class="movie-details">
+                <h1 class="movie-title-large">{{ movie.title }}</h1>
+                
+                <div class="movie-metadata">
+                    <span><i class="fas fa-calendar"></i> {{ movie.year }}</span>
+                    <span><i class="fas fa-film"></i> {{ movie.genre }}</span>
+                    <span class="rating-large"><i class="fas fa-star"></i> {{ movie.rating }}/10</span>
+                    <span><i class="fas fa-eye"></i> {{ movie.view_count }} views</span>
+                </div>
+
+                <p class="movie-description-full">{{ movie.description }}</p>
+
+                <div class="action-buttons">
+                    {% if movie.trailer_url %}
+                    <a href="{{ movie.trailer_url }}" target="_blank" class="btn btn-secondary">
+                        <i class="fas fa-video"></i> Watch Trailer
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-secondary" onclick="addToList()">
+                        <i class="fas fa-plus"></i> Add to My List
+                    </button>
+                    <button class="btn btn-secondary" onclick="shareMovie()">
+                        <i class="fas fa-share"></i> Share
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommended Movies -->
+        {% if recommended %}
+        <div class="recommended-section">
+            <div class="section-header">
+                <h2 class="section-title">More Like This</h2>
+            </div>
+            <div class="movie-grid">
+                {% for rec_movie in recommended %}
+                <a href="{{ url_for('watch_movie', movie_id=rec_movie.id) }}" class="movie-card" style="text-decoration: none;">
+                    {% if rec_movie.is_trending %}
+                    <span class="trending-badge">TRENDING</span>
+                    {% endif %}
+                    <img src="{{ rec_movie.image_url }}" alt="{{ rec_movie.title }}" class="movie-poster" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/00d9ff?text={{ rec_movie.title }}'">
+                    <div class="movie-info">
+                        <h3 class="movie-title">{{ rec_movie.title }}</h3>
+                        <div class="movie-meta">
+                            <span class="movie-year">{{ rec_movie.year }}</span>
+                            <span class="movie-rating">
+                                <i class="fas fa-star"></i> {{ rec_movie.rating }}
+                            </span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Custom video player controls
+    const video = document.querySelector('.video-player');
+    
+    if (video) {
+        // Keyboard controls
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' && e.target === document.body) {
+                e.preventDefault();
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            } else if (e.code === 'ArrowRight') {
+                video.currentTime += 10; // Skip forward 10s
+            } else if (e.code === 'ArrowLeft') {
+                video.currentTime -= 10; // Skip backward 10s
+            } else if (e.code === 'ArrowUp') {
+                e.preventDefault();
+                video.volume = Math.min(video.volume + 0.1, 1); // Volume up
+            } else if (e.code === 'ArrowDown') {
+                e.preventDefault();
+                video.volume = Math.max(video.volume - 0.1, 0); // Volume down
+            } else if (e.code === 'KeyF') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    video.requestFullscreen();
+                }
+            }
+        });
+
+        // Track video progress
+        video.addEventListener('timeupdate', function() {
+            const progress = (video.currentTime / video.duration) * 100;
+            // Could save progress to localStorage or database
+        });
+
+        // Auto-play next recommended movie when current ends
+        video.addEventListener('ended', function() {
+            const recommendedMovies = document.querySelectorAll('.recommended-section .movie-card');
+            if (recommendedMovies.length > 0) {
+                // Show "Next video in 5 seconds" notification
+                showNextVideoNotification();
+            }
+        });
+    }
+
+    function addToList() {
+        alert('Added to your list! (This feature will save to your account)');
+        // In production, you'd make an AJAX call to save to database
+    }
+
+    function shareMovie() {
+        const movieTitle = "{{ movie.title }}";
+        const movieUrl = window.location.href;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: movieTitle,
+                text: 'Watch ' + movieTitle + ' on CINEGO',
+                url: movieUrl
+            });
+        } else {
+            // Fallback - copy to clipboard
+            navigator.clipboard.writeText(movieUrl);
+            alert('Link copied to clipboard!');
+        }
+    }
+
+    function showNextVideoNotification() {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            background: rgba(20, 20, 20, 0.95);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+        `;
+        notification.innerHTML = `
+            <p style="margin: 0 0 0.5rem 0; color: var(--text-secondary);">Video ended</p>
+            <p style="margin: 0; color: var(--text-primary); font-weight: 600;">Up next: Recommended movie</p>
+        `;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
+    console.log('🎬 Video player loaded - Keyboard shortcuts:');
+    console.log('Space: Play/Pause');
+    console.log('→: Forward 10s');
+    console.log('←: Backward 10s');
+    console.log('↑: Volume up');
+    console.log('↓: Volume down');
+    console.log('F: Fullscreen');
+</script>
+{% endblock %}

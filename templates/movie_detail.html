@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }} - CINEGO{% endblock %}
+
+{% block content %}
+<main>
+    <div style="max-width: 900px; margin: 0 auto;">
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 3rem; margin-bottom: 3rem;">
+            <div>
+                <img src="{{ movie.image_url }}" alt="{{ movie.title }}" style="width: 100%; border-radius: 16px; box-shadow: 0 20px 60px rgba(0, 217, 255, 0.3);" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/00d9ff?text={{ movie.title }}'">
+            </div>
+            <div>
+                <h1 style="font-family: 'Bebas Neue', cursive; font-size: 3rem; margin-bottom: 1rem; letter-spacing: 2px;">{{ movie.title }}</h1>
+                <div style="display: flex; gap: 2rem; margin-bottom: 2rem; color: var(--text-secondary);">
+                    <span><i class="fas fa-calendar"></i> {{ movie.year }}</span>
+                    <span><i class="fas fa-film"></i> {{ movie.genre }}</span>
+                    <span style="color: var(--primary-color);"><i class="fas fa-star"></i> {{ movie.rating }}/10</span>
+                    <span><i class="fas fa-eye"></i> {{ movie.view_count }} views</span>
+                </div>
+                <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 2rem;">{{ movie.description }}</p>
+                <div style="display: flex; gap: 1rem;">
+                    <a href="{{ url_for('watch_movie', movie_id=movie.id) }}" class="btn btn-primary" style="font-size: 1rem; text-decoration: none;">
+                        <i class="fas fa-play"></i> Watch Now
+                    </a>
+                    {% if movie.trailer_url %}
+                    <a href="{{ movie.trailer_url }}" target="_blank" class="btn btn-secondary" style="font-size: 1rem; text-decoration: none;">
+                        <i class="fas fa-video"></i> Watch Trailer
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-secondary" style="font-size: 1rem;">
+                        <i class="fas fa-plus"></i> My List
+                    </button>
+                </div>
+            </div>
+        </div>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+</main>
+{% endblock %}

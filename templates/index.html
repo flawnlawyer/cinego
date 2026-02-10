@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}CINEGO - Stream Movies & Series{% endblock %}
+
+{% block content %}
+<main>
+    <!-- Stats Section -->
+    <div class="stats-container">
+        <div class="stat-item">
+            <div class="stat-number">{{ trending|length }}</div>
+            <div class="stat-label">TRENDING NOW</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ all_movies|length }}</div>
+            <div class="stat-label">TOTAL MOVIES</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ series|length }}</div>
+            <div class="stat-label">TV SERIES</div>
+        </div>
+    </div>
+
+    <!-- Trending Section -->
+    {% if trending %}
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">🔥 Trending</h2>
+            <a href="{{ url_for('movies') }}" class="view-all">View All →</a>
+        </div>
+        <div class="movie-grid">
+            {% for movie in trending %}
+            <a href="{{ url_for('watch_movie', movie_id=movie.id) }}" class="movie-card" style="text-decoration: none;">
+                <span class="trending-badge">TRENDING</span>
+                <img src="{{ movie.image_url }}" alt="{{ movie.title }}" class="movie-poster" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/00d9ff?text={{ movie.title }}'">
+                <div class="movie-info">
+                    <h3 class="movie-title">{{ movie.title }}</h3>
+                    <div class="movie-meta">
+                        <span class="movie-year">{{ movie.year }}</span>
+                        <span class="movie-rating">
+                            <i class="fas fa-star"></i> {{ movie.rating }}
+                        </span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Latest Movies -->
+    {% if latest %}
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">🎬 Latest Movie</h2>
+            <a href="{{ url_for('movies') }}" class="view-all">View All →</a>
+        </div>
+        <div class="movie-grid">
+            {% for movie in latest %}
+            <a href="{{ url_for('watch_movie', movie_id=movie.id) }}" class="movie-card" style="text-decoration: none;">
+                <img src="{{ movie.image_url }}" alt="{{ movie.title }}" class="movie-poster" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/ff00e5?text={{ movie.title }}'">
+                <div class="movie-info">
+                    <h3 class="movie-title">{{ movie.title }}</h3>
+                    <div class="movie-meta">
+                        <span class="movie-year">{{ movie.year }}</span>
+                        <span class="movie-rating">
+                            <i class="fas fa-star"></i> {{ movie.rating }}
+                        </span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- TV Series -->
+    {% if series %}
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">📺 TV Series</h2>
+            <a href="{{ url_for('series_page') }}" class="view-all">View All →</a>
+        </div>
+        <div class="movie-grid">
+            {% for show in series %}
+            <div class="movie-card">
+                <img src="{{ show.image_url }}" alt="{{ show.title }}" class="movie-poster" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/667eea?text={{ show.title }}'">
+                <div class="movie-info">
+                    <h3 class="movie-title">{{ show.title }}</h3>
+                    <div class="movie-meta">
+                        <span class="movie-year">{{ show.seasons }} Season{{ 's' if show.seasons > 1 else '' }}</span>
+                        <span class="movie-rating">
+                            <i class="fas fa-star"></i> {{ show.rating }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- All Movies -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">🎥 All Movies</h2>
+        </div>
+        <div class="movie-grid">
+            {% for movie in all_movies %}
+            <a href="{{ url_for('watch_movie', movie_id=movie.id) }}" class="movie-card" style="text-decoration: none;">
+                {% if movie.is_trending %}
+                <span class="trending-badge">HOT</span>
+                {% endif %}
+                <img src="{{ movie.image_url }}" alt="{{ movie.title }}" class="movie-poster" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/00d9ff?text={{ movie.title }}'">
+                <div class="movie-info">
+                    <h3 class="movie-title">{{ movie.title }}</h3>
+                    <div class="movie-meta">
+                        <span class="movie-year">{{ movie.year }} • {{ movie.genre }}</span>
+                        <span class="movie-rating">
+                            <i class="fas fa-star"></i> {{ movie.rating }}
+                        </span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}

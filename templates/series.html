@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}TV Series - CINEGO{% endblock %}
+
+{% block content %}
+<main>
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">📺 TV Series</h2>
+            <span class="view-all">{{ series|length }} Series Available</span>
+        </div>
+        <div class="movie-grid">
+            {% for show in series %}
+            <div class="movie-card">
+                <img src="{{ show.image_url }}" alt="{{ show.title }}" class="movie-poster" onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/667eea?text={{ show.title }}'">
+                <div class="movie-info">
+                    <h3 class="movie-title">{{ show.title }}</h3>
+                    <div class="movie-meta">
+                        <span class="movie-year">{{ show.year }} • {{ show.seasons }} Season{{ 's' if show.seasons > 1 else '' }}</span>
+                        <span class="movie-rating">
+                            <i class="fas fa-star"></i> {{ show.rating }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{% endblock %}
