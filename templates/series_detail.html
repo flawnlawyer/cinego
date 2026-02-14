@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}{{ series.title }} - CINEGO{% endblock %}
+
+{% block extra_css %}
+<style>
+    .series-detail-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .hero-section {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        min-height: 500px;
+        margin-bottom: 3rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('{{ series.image_url }}');
+        background-size: cover;
+        background-position: center;
+        filter: blur(20px) brightness(0.4);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        gap: 3rem;
+        padding: 3rem;
+        align-items: flex-end;
+        height: 100%;
+    }
+
+    .poster-large {
+        width: 300px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        transition: transform 0.3s ease;
+    }
+
+    .poster-large:hover {
+        transform: scale(1.02);
+    }
+
+    .series-info {
+        flex: 1;
+        color: white;
+    }
+
+    .series-title {
+        font-family: 'Bebas Neue', cursive;
+        font-size: 5rem;
+        line-height: 0.9;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        background: linear-gradient(45deg, #fff, #00d9ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .meta-tags {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .meta-tag {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        backdrop-filter: blur(10px);
+    }
+
+    .rating-badge {
+        color: #ffd700;
+        font-weight: bold;
+    }
+
+    .description {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        max-width: 800px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-watch {
+        background: linear-gradient(45deg, #00d9ff, #0066ff);
+        color: white;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 10px 20px rgba(0, 217, 255, 0.3);
+    }
+
+    .btn-watch:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(0, 217, 255, 0.5);
+        color: white;
+    }
+
+    .season-info {
+        margin-top: 2rem;
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+    }
+
+    @media (max-width: 900px) {
+        .hero-content {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .series-info {
+            width: 100%;
+        }
+
+        .meta-tags {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons {
+            justify-content: center;
+        }
+
+        .description {
+            margin: 0 auto 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="series-detail-container">
+    <div class="hero-section">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <img src="{{ series.image_url }}" alt="{{ series.title }}" class="poster-large"
+                onerror="this.src='https://via.placeholder.com/300x450/1a1a1a/00d9ff?text={{ series.title }}'">
+
+            <div class="series-info">
+                <h1 class="series-title">{{ series.title }}</h1>
+
+                <div class="meta-tags">
+                    <span class="meta-tag">
+                        <i class="fas fa-calendar"></i> {{ series.year }}
+                    </span>
+                    <span class="meta-tag">
+                        <i class="fas fa-film"></i> {{ series.genre }}
+                    </span>
+                    <span class="meta-tag rating-badge">
+                        <i class="fas fa-star"></i> {{ series.rating }}/10
+                    </span>
+                    <span class="meta-tag">
+                        <i class="fas fa-layer-group"></i> {{ series.seasons }} Seasons
+                    </span>
+                </div>
+
+                <p class="description">{{ series.description }}</p>
+
+                <div class="action-buttons">
+                    <a href="{{ url_for('watch_series', series_id=series.id) }}" class="btn-watch">
+                        <i class="fas fa-play"></i> Watch Now
+                    </a>
+                    <button class="btn btn-secondary" onclick="addToList()">
+                        <i class="fas fa-plus"></i> Add to List
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional sections like Episodes list could go here in future -->
+    <div class="season-info">
+        <h2><i class="fas fa-list-alt"></i> Episodes</h2>
+        <p style="color: var(--text-secondary); margin-top: 1rem;">
+            Episode list for {{ series.seasons }} seasons coming soon.
+            Click "Watch Now" to view the latest trailer/clip!
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function addToList() {
+        alert('Added to your list!');
+    }
+</script>
+{% endblock %}
