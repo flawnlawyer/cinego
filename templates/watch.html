@@ -154,12 +154,17 @@
 {% block content %}
 <div class="watch-container">
     <!-- Video Player -->
+    <!-- Video Player -->
     <div class="video-player-wrapper">
         {% if movie.video_url %}
         <video class="video-player" controls autoplay>
             <source src="{{ movie.video_url }}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
+        {% elif movie.trailer_url %}
+        <div class="video-player" style="height: 80vh;">
+            <iframe width="100%" height="100%" src="{{ movie.trailer_url }}?autoplay=1" title="Movie Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
         {% else %}
         <div class="player-error">
             <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
