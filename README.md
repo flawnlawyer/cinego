@@ -5,10 +5,12 @@ A modern, cinematic movie streaming website built with Flask, Jinja2, and SQLite
 ## Features
 
 - 🎬 **User Authentication** - Secure login and registration with password hashing
-- 🎥 **Movie Catalog** - Browse extensive movie and TV series collections
-- ▶️ **Video Streaming** - Click any movie to watch with full-screen player
+- 🎥 **TMDB-Powered Catalog** - Trending, top-rated, and now-playing movies plus popular TV series
+- ▶️ **Video Streaming** - Watch movies or series with full-screen player support
 - ⌨️ **Keyboard Controls** - Space to play/pause, arrows for seek/volume, F for fullscreen
+- 🎞️ **Trailer Support** - YouTube trailer embeds for movies and series when available
 - 🔥 **Trending Section** - Discover what's hot right now
+- 📺 **Series Detail & Watch Pages** - Dedicated layouts and recommendations for TV series
 - 📊 **Statistics Dashboard** - View platform statistics
 - 🎨 **Modern Dark UI** - Sleek, cinematic design with gradient accents
 - 📱 **Responsive Design** - Works on all devices
@@ -19,6 +21,7 @@ A modern, cinematic movie streaming website built with Flask, Jinja2, and SQLite
 - **Backend**: Python Flask
 - **Template Engine**: Jinja2
 - **Database**: SQLite
+- **Data Source**: TMDB API
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Icons**: Font Awesome 6
 - **Fonts**: Google Fonts (Bebas Neue, Outfit)
@@ -28,6 +31,8 @@ A modern, cinematic movie streaming website built with Flask, Jinja2, and SQLite
 ```
 cinego/
 ├── app.py                 # Main Flask application
+├── tmdb_client.py         # TMDB API client + data mapping
+├── verify_db.py           # DB verification script (writes verify_result_phase3.txt)
 ├── requirements.txt       # Python dependencies
 ├── instance/
 │   └── cinego.db         # SQLite database (auto-created)
@@ -43,7 +48,10 @@ cinego/
     ├── register.html     # Registration page
     ├── movies.html       # Movies listing
     ├── series.html       # TV series listing
-    └── movie_detail.html # Movie details
+   ├── movie_detail.html # Movie details
+   ├── series_detail.html# Series details
+   ├── watch.html        # Movie watch page
+   └── watch_series.html # Series watch page
 ```
 
 ## Installation & Setup
@@ -80,15 +88,15 @@ The application will start on `http://localhost:5000`
 
 ### Database
 - The SQLite database is automatically created on first run
-- Sample movies and TV series are pre-loaded
+- Movies and series are fetched from TMDB on first run
 - User passwords are securely hashed using Werkzeug
 
 ### Sample Data
-The application comes with:
-- 15 sample movies across various genres
-- 6 sample TV series
-- Trending indicators for popular content
-- View count tracking
+On first run, the app populates:
+- Trending, top-rated, and now-playing movies
+- Action and comedy movie selections
+- Popular TV series
+- Trailer URLs for the top movies and all series where available
 
 ## Usage Guide
 
@@ -117,6 +125,11 @@ The application comes with:
 4. See recommended movies after watching
 5. Share or add to your list
 
+### Watching Series
+1. Open a series detail page and click **Watch Now**
+2. Watch the series trailer or clip (if available)
+3. Explore recommended series below the player
+
 ### Statistics
 The homepage displays:
 - Number of trending movies
@@ -126,18 +139,14 @@ The homepage displays:
 ## Customization
 
 ### Adding Movies
-Edit `app.py` and add entries to the `sample_movies` list in the `init_db()` function:
-
-```python
-('Movie Title', 2024, 'Genre', 8.5, 'image_url', 'Description', is_trending, view_count, 'video_url', 'trailer_url')
-```
+Edit `app.py` inside `init_db()` if you want to seed custom entries alongside TMDB results.
 
 **Video URLs can be:**
 - Direct MP4 files: `/static/videos/movie.mp4`
 - Cloud storage: `https://your-cdn.com/video.mp4`
 - YouTube embeds: `https://youtube.com/embed/VIDEO_ID`
 
-See `VIDEO_STREAMING_GUIDE.md` for detailed instructions on adding your own videos.
+**Trailer URLs** should be YouTube embed links. Both movies and series use the `trailer_url` column for trailer playback.
 
 ### Styling
 Modify `static/css/style.css` to customize:
@@ -151,6 +160,9 @@ To reset the database:
 1. Stop the application
 2. Delete `instance/cinego.db`
 3. Restart the application (database will be recreated)
+
+### TMDB Integration
+TMDB data is fetched on first run by `tmdb_client.py`. If you want to use your own TMDB token, replace the `READ_ACCESS_TOKEN` in that file.
 
 ## Security Notes
 
@@ -203,6 +215,20 @@ Change the port in `app.py`:
 ```python
 app.run(debug=True, host='0.0.0.0', port=5001)
 ```
+
+### TMDB Fetch Issues
+If the app starts with an empty catalog, confirm internet access and that the TMDB token in `tmdb_client.py` is valid.
+
+## Utilities
+
+### Database Verification
+Run the verification script to check series and trailer counts:
+
+```bash
+python verify_db.py
+```
+
+This writes results to `verify_result_phase3.txt` in the project root.
 
 ## License
 
