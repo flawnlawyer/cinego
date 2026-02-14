@@ -14,6 +14,12 @@ app.config['DATABASE'] = os.path.join(app.instance_path, 'cinego.db')
 # Ensure instance folder exists
 os.makedirs(app.instance_path, exist_ok=True)
 
+
+from tmdb_client import TMDBClient
+
+# ... existing imports ...
+
+
 def get_db():
     """Get database connection"""
     conn = sqlite3.connect(app.config['DATABASE'])
@@ -21,7 +27,7 @@ def get_db():
     return conn
 
 def init_db():
-    """Initialize database with tables and sample data"""
+    """Initialize database with tables and sample data from TMDB"""
     conn = get_db()
     cursor = conn.cursor()
     
@@ -39,7 +45,7 @@ def init_db():
     # Create movies table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS movies (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
             year INTEGER,
             genre TEXT,
@@ -56,14 +62,16 @@ def init_db():
     # Create series table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS series (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
             year INTEGER,
             genre TEXT,
             rating REAL,
             image_url TEXT,
             description TEXT,
-            seasons INTEGER DEFAULT 1
+            seasons INTEGER DEFAULT 1,
+            video_url TEXT,
+            trailer_url TEXT
         )
     ''')
     
@@ -104,45 +112,97 @@ def init_db():
         )
     ''')
     
-    # Insert sample movies
-    sample_movies = [
-        ('The Last Stand', 2023, 'Action', 8.5, 'https://image.tmdb.org/t/p/w500/1E5baAaEse26fej7uHcjOgEE2t2.jpg', 'An epic action thriller', 1, 1250, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Midnight Echo', 2024, 'Drama', 7.8, 'https://image.tmdb.org/t/p/w500/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg', 'A gripping drama', 1, 980, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Shadow Protocol', 2023, 'Thriller', 8.2, 'https://image.tmdb.org/t/p/w500/sv1xJUazXeYqALzczSZ3O6nkH75.jpg', 'High-stakes espionage', 1, 1411, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Neon Dreams', 2024, 'Sci-Fi', 9.0, 'https://image.tmdb.org/t/p/w500/cinER0ESG0eJ49kXlExM0MEWGxW.jpg', 'Futuristic adventure', 1, 2100, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('The Forgotten', 2023, 'Horror', 7.5, 'https://image.tmdb.org/t/p/w500/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg', 'Supernatural horror', 0, 650, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Ocean Rise', 2024, 'Adventure', 8.7, 'https://image.tmdb.org/t/p/w500/kHlX3oqdD4VGaLpB8O78M8DXTM5.jpg', 'Maritime epic', 1, 1800, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Silent Hills', 2023, 'Mystery', 7.9, 'https://image.tmdb.org/t/p/w500/wWba3TaojhK7NdycRhoQpsG0FaH.jpg', 'Mystery thriller', 0, 720, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Velocity', 2024, 'Action', 8.3, 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg', 'High-speed action', 1, 1560, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Eternal Spring', 2023, 'Romance', 7.6, 'https://image.tmdb.org/t/p/w500/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg', 'Love story', 0, 890, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Dark Matter', 2024, 'Sci-Fi', 8.9, 'https://image.tmdb.org/t/p/w500/aWeKITRFbbwY8txG5uCj4rMCfSP.jpg', 'Space odyssey', 1, 2350, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('The Heist', 2023, 'Crime', 8.1, 'https://image.tmdb.org/t/p/w500/4m1Au3YkjqsxF8iwQy0fPYSxE0h.jpg', 'Master thieves', 0, 1100, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Phoenix Rising', 2024, 'Fantasy', 8.6, 'https://image.tmdb.org/t/p/w500/xDMIl84Qo5Tsu62c9DGWhmPI67A.jpg', 'Mythical journey', 1, 1920, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Red Zone', 2023, 'War', 7.7, 'https://image.tmdb.org/t/p/w500/tB9vjZWEIyDxZOqcGNn3hnr0FQm.jpg', 'War drama', 0, 780, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Whispers', 2024, 'Horror', 7.4, 'https://image.tmdb.org/t/p/w500/feSiISwgEpVzR1v3zv2n2AU4ANJ.jpg', 'Haunting tale', 0, 620, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-        ('Code Black', 2023, 'Thriller', 8.4, 'https://image.tmdb.org/t/p/w500/yVyNBDyTW0mMmDNTDQ6BRdFKQO5.jpg', 'Cyber thriller', 1, 1650, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
-    ]
-    
-    cursor.executemany('''
-        INSERT OR IGNORE INTO movies (title, year, genre, rating, image_url, description, is_trending, view_count, video_url, trailer_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', sample_movies)
-    
-    # Insert sample series
-    sample_series = [
-        ('Breaking Boundaries', 2023, 'Drama', 9.1, 'https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg', 'Award-winning series', 3),
-        ('Cosmic Wars', 2024, 'Sci-Fi', 8.8, 'https://image.tmdb.org/t/p/w500/c8t4w2UYMf5bJHkUSCPSaSBR5X.jpg', 'Epic space saga', 2),
-        ('The Detective', 2023, 'Crime', 8.5, 'https://image.tmdb.org/t/p/w500/cNAYI8YD0xOzQlI5ZF6E0KhWWkJ.jpg', 'Crime investigation', 4),
-        ('Lost Kingdom', 2024, 'Fantasy', 8.9, 'https://image.tmdb.org/t/p/w500/uKvVjHNqB5VmOrdxqAt2F7J78ED.jpg', 'Fantasy adventure', 2),
-        ('Night Shift', 2023, 'Thriller', 8.2, 'https://image.tmdb.org/t/p/w500/3V4kLQg0kSqPLctI5ziYWabAZYF.jpg', 'Medical thriller', 3),
-        ('Family Ties', 2024, 'Comedy', 7.9, 'https://image.tmdb.org/t/p/w500/7Cp0ev29fqq9TiJTyxIBzXrh5Fa.jpg', 'Family comedy', 5),
-    ]
-    
-    cursor.executemany('''
-        INSERT OR IGNORE INTO series (title, year, genre, rating, image_url, description, seasons)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', sample_series)
-    
+    # Check if data already exists to avoid refetching
+    cursor.execute('SELECT COUNT(*) FROM movies')
+    if cursor.fetchone()[0] == 0:
+        print("Fetching data from TMDB...")
+        
+        all_movies = {}
+        
+        # Helper to process and add movies
+        def add_movies(movie_list):
+            for m in movie_list:
+                all_movies[m['id']] = m
+        
+        # Fetch multiple pages for better variety
+        print("Fetching Trending...")
+        for page in range(1, 4):
+            add_movies(TMDBClient.fetch_trending_movies(page=page))
+            
+        print("Fetching Top Rated...")
+        for page in range(1, 3):
+            add_movies(TMDBClient.fetch_top_rated_movies(page=page))
+            
+        print("Fetching Now Playing...")
+        for page in range(1, 3):
+            add_movies(TMDBClient.fetch_now_playing_movies(page=page))
+            
+        print("Fetching Action & Comedy...")
+        add_movies(TMDBClient.fetch_action_movies(page=1))
+        add_movies(TMDBClient.fetch_comedy_movies(page=1))
+        
+        # Sort by popularity to find the "best" ones to get trailers for
+        sorted_movies = sorted(all_movies.values(), key=lambda x: x.get('view_count', 0), reverse=True)
+        
+        # Fetch trailers for top 20 movies to keep startup time reasonable but responsive
+        print("Fetching trailers for top movies...")
+        count = 0
+        for movie_data in sorted_movies:
+            if count < 20: 
+                video_data = TMDBClient.fetch_movie_videos(movie_data['id'])
+                if video_data:
+                    # We store the URL in trailer_url mostly, but could use video_url if it's a "clip" acting as a movie
+                    movie_data['trailer_url'] = video_data['url']
+                count += 1
+            
+            # Insert into DB
+            cursor.execute('''
+                INSERT OR IGNORE INTO movies (id, title, year, genre, rating, image_url, description, is_trending, view_count, video_url, trailer_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                movie_data['id'], 
+                movie_data['title'], 
+                movie_data['year'], 
+                movie_data['genre'], 
+                movie_data['rating'], 
+                movie_data['image_url'], 
+                movie_data['description'], 
+                movie_data.get('is_trending', 0), 
+                movie_data['view_count'], 
+                movie_data['video_url'], 
+                movie_data.get('trailer_url', '')
+            ))
+            
+        # Fetch series (more pages)
+        print("Fetching Series...")
+        all_series = []
+        for page in range(1, 4):
+            all_series.extend(TMDBClient.fetch_popular_series(page=page))
+
+        print(f"Fetching videos for {len(all_series)} series...")
+        for s in all_series:
+            # Fetch video for ALL series as requested
+            video_data = TMDBClient.fetch_series_videos(s['id'])
+            trailer_url = video_data['url'] if video_data else ''
+
+            cursor.execute('''
+                INSERT OR IGNORE INTO series (id, title, year, genre, rating, image_url, description, seasons, video_url, trailer_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                s.get('id'), # Use TMDB ID
+                s['title'], 
+                s['year'], 
+                s['genre'], 
+                s['rating'], 
+                s['image_url'], 
+                s['description'], 
+                s['seasons'],
+                '', # video_url (empty for now)
+                trailer_url
+            ))
+            
+        print(f"Database initialized with {len(all_movies)} movies and {len(all_series)} series data.")
+        
     conn.commit()
     conn.close()
 
@@ -578,6 +638,43 @@ def movie_detail(movie_id):
         return redirect(url_for('index'))
     
     return render_template('movie_detail.html', movie=movie, username=session.get('username'))
+
+@app.route('/series/<int:series_id>')
+@login_required
+def series_detail(series_id):
+    """Series detail page"""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM series WHERE id = ?', (series_id,))
+    series = cursor.fetchone()
+    conn.close()
+    
+    if not series:
+        flash('Series not found', 'error')
+        return redirect(url_for('series_page'))
+    
+    return render_template('series_detail.html', series=series, username=session.get('username'))
+
+@app.route('/watch/series/<int:series_id>')
+@login_required
+def watch_series(series_id):
+    """Watch series - Video player page"""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM series WHERE id = ?', (series_id,))
+    series = cursor.fetchone()
+    
+    # Get recommended series
+    cursor.execute('SELECT * FROM series WHERE genre = ? AND id != ? LIMIT 6', (series['genre'], series_id))
+    recommended = cursor.fetchall()
+    
+    conn.close()
+    
+    if not series:
+        flash('Series not found', 'error')
+        return redirect(url_for('series_page'))
+    
+    return render_template('watch_series.html', series=series, recommended=recommended, username=session.get('username'))
 
 @app.route('/watch/<int:movie_id>')
 @login_required
